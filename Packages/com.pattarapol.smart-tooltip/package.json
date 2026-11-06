@@ -1,0 +1,37 @@
+{
+  "name": "com.pattarapol.smart-tooltip",
+  "version": "0.1.0",
+  "displayName": "Smart Tooltip",
+  "description": "Tutorial tooltips that point at anything: UI, 2D sprites, 3D objects, even things off screen or behind the camera. The screen dims, a hole opens around the target, and rules pick which tip to show.",
+  "unity": "2022.3",
+  "license": "MIT",
+  "author": {
+    "name": "Pattarapol Tiensermpong"
+  },
+  "keywords": [
+    "tooltip",
+    "tutorial",
+    "onboarding",
+    "guidance",
+    "highlight",
+    "ftue"
+  ],
+  "dependencies": {
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.physics2d": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.ugui": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "UI Tooltip",
+      "description": "Three buttons on a canvas. Rules pick the next tip from the game state.",
+      "path": "Samples~/UI Tooltip"
+    },
+    {
+      "displayName": "3D World",
+      "description": "Orbiting camera, a runner that leaves the screen, an object turned in depth and one that ends up behind the camera.",
+      "path": "Samples~/3D World"
+    }
+  ]
+}

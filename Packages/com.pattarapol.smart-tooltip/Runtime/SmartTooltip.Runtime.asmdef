@@ -1,0 +1,17 @@
+{
+    "name": "SmartTooltip.Runtime",
+    "rootNamespace": "SmartTooltip",
+    "references": [
+        "SmartTooltip.Core",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -61,3 +61,11 @@ sysinfo.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Local link to the package samples, so they can be edited in this project.
+# The real files live in Packages/com.pattarapol.smart-tooltip/Samples~
+/[Aa]ssets/SmartTooltipSamples
+/[Aa]ssets/SmartTooltipSamples.meta
+
+# A global "*~" rule would hide this folder, but it must be in git.
+!Samples~/

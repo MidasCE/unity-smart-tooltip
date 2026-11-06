@@ -1,11 +1,14 @@
 {
   "dependencies": {
-    "com.pattarapol.guidance": {
-      "version": "file:com.pattarapol.guidance",
+    "com.pattarapol.smart-tooltip": {
+      "version": "file:com.pattarapol.smart-tooltip",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.unity.modules.ui": "1.0.0"
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.ugui": "1.0.0"
       }
     },
     "com.unity.collab-proxy": {
