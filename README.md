@@ -2,7 +2,7 @@
 
 Tooltips that point at things in your game. A button, a sprite, a 3D character, a spot on the ground. The screen dims, a hole opens around the target, and a bubble with an arrow explains what to do.
 
-Works in 2D and 3D, with any camera, in Built-in, URP and HDRP. Free and open source (MIT).
+Works in 2D and 3D, with any camera. Tested in the Built-in render pipeline. URP and HDRP should work too, because the overlay only uses a plain UI shader, but they are not tested yet. Free and open source (MIT).
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/4747770c-a6c9-4df8-81a9-18a3ca3a8919" width="720" alt="A tip follows a runner off screen, then points at treasure behind the camera">

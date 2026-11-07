@@ -429,7 +429,7 @@ alpha   *= smoothstep(-softness, softness, d);      // inside < 0, outside > 0
 
 `d` is the distance from the pixel to the rounded hole edge. It is negative inside and positive outside. Smoothstep turns that into a soft edge. The radius is limited to half the hole size so tiny holes stay round. When there is no hole (size under 0.5 px), `_Hole` is moved to (−100000, …) so every pixel counts as outside.
 
-It is a plain UI shader (CG, no lighting), so it works in Built-in, URP and HDRP.
+It is a plain UI shader (CG, no lighting), so it should work in Built-in, URP and HDRP. Only Built-in is tested so far.
 
 ### Taps
 

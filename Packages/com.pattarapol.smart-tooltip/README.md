@@ -101,7 +101,7 @@ TooltipTargetRegistry.Default.Unregister(spot);
 * **Placement.** Uses the prompt's `Placement`. If there is no room, it flips to the other side. It always stays inside `Screen.safeArea`.
 * **Taps.** Taps inside the hole go to your game as normal, so the player can press the highlighted thing. A tap on the target raises `TargetTapped`. Taps outside are blocked and raise `OutsideTapped`. By default an outside tap also closes the tooltip.
 * **Input read directly.** If your game reads input itself instead of through the EventSystem, check `overlay.IsBlocked(screenPosition)` first.
-* **Render pipelines.** The hole is a simple UI shader, so it works in Built-in, URP and HDRP.
+* **Render pipelines.** Tested in Built-in. The hole is a plain UI shader, so URP and HDRP should work too, but they are not tested yet.
 
 To change the look, add `TooltipOverlay` to a GameObject in your scene and set its fields in the Inspector. For your own tooltip, make a prefab with a `TooltipBubble` component and assign it to **Bubble Prefab**. The arrow must point up with its pivot in the center. If you use TextMeshPro, subclass `TooltipBubble` and override `SetText`.
 
