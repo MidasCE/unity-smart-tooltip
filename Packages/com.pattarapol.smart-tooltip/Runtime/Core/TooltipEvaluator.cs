@@ -22,11 +22,14 @@ namespace SmartTooltip.Core
             this.rules = list.OrderByDescending(r => r.Priority).ToArray();
         }
 
-        /// <summary>Rules that can show now, best first. If a target is not on screen, try the next one.</summary>
+        /// <summary>
+        /// Rules that can show now, best first. Seen rules and rules that are already done are left out.
+        /// If a target can't be found, try the next one.
+        /// </summary>
         public IEnumerable<TooltipRule> Candidates(ITooltipContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-            return rules.Where(r => !(r.ShowOnce && progress.HasSeen(r.Id)) && r.IsSatisfiedBy(context));
+            return rules.Where(r => !(r.ShowOnce && progress.HasSeen(r.Id)) && r.IsSatisfiedBy(context) && !r.IsDone(context));
         }
 
         public void MarkShown(TooltipRule rule)

@@ -56,5 +56,24 @@ namespace SmartTooltip
 
             return false;
         }
+
+        public bool TryFind(string targetId, out ITooltipTarget target)
+        {
+            if (TryResolve(targetId, out target))
+                return true;
+            if (string.IsNullOrEmpty(targetId) || !byId.TryGetValue(targetId, out var list))
+                return false;
+
+            for (var i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i].TryGetScreenRect(out _))
+                {
+                    target = list[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

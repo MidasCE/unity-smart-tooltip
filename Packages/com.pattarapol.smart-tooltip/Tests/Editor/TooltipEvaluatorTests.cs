@@ -48,6 +48,32 @@ namespace SmartTooltip.Tests
         }
 
         [Test]
+        public void Cooldown_DefaultsToZero_NegativeThrows()
+        {
+            Assert.AreEqual(0f, Rule("a").Cooldown);
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new TooltipRule("b", new TooltipPrompt("target", "b"), cooldown: -1f));
+        }
+
+        [Test]
+        public void Candidates_SkipRulesThatAreAlreadyDone()
+        {
+            var rule = new TooltipRule("shop", new TooltipPrompt("target", "shop"), doneWhen: Condition.Is("visitedShop", true));
+            var evaluator = new TooltipEvaluator(new[] { rule }, new InMemoryProgressStore());
+
+            Assert.IsNotEmpty(evaluator.Candidates(new TooltipContext().Set("visitedShop", false)));
+            Assert.IsEmpty(evaluator.Candidates(new TooltipContext().Set("visitedShop", true)));
+        }
+
+        [Test]
+        public void Rule_WithoutDoneCondition_IsNeverDone()
+        {
+            Assert.IsFalse(Rule("a").IsDone(new TooltipContext()));
+            Assert.IsNull(Rule("a").DoneWhen);
+            Assert.AreEqual(TargetRequirement.OnScreen, Rule("a").Requires);
+        }
+
+        [Test]
         public void DuplicateIds_Throw()
         {
             Assert.Throws<ArgumentException>(() =>

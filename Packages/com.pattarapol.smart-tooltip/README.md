@@ -1,12 +1,12 @@
 # Smart Tooltip
 
-Rule-driven tooltips and highlights for Unity. Tag anything (a UI button, a 2D sprite, a 3D mesh) with an id, describe when a tip should appear, and let the evaluator pick what to show.
+Rule-driven tooltips and highlights for Unity. Tag anything (a UI button, a 2D sprite, a 3D mesh) with an id, describe when a tip should appear, and let the director pick what to show.
 
-> Status: early. Rules, targets and the overlay work. A driver that runs rules for you is still to come.
+> Status is early. Rules, targets, the overlay and the director work.
 
 ## Install
 
-Package Manager → **Add package from git URL…**
+In the Package Manager, choose **Add package from git URL…** and paste this.
 
 ```
 https://github.com/MidasCE/unity-smart-tooltip.git?path=Packages/com.pattarapol.smart-tooltip
@@ -18,7 +18,7 @@ Requires Unity 2022.3 or newer.
 
 1. Add a **TooltipTarget** component to the object you want to point at and give it an id, for example `play-button`. See [Targets](#targets).
 
-2. Describe your rules:
+2. Describe your rules. `conditions` say when a tip may show. `doneWhen` says when the player has done what it asks.
 
 ```csharp
 using SmartTooltip;
@@ -28,40 +28,35 @@ var rules = new[]
 {
     new TooltipRule("first-play",
         new TooltipPrompt("play-button", "Tap here to start!", Placement.Above),
-        new[]
-        {
-            Condition.Is("screen", "home"),
-            Condition.Compare("level", ComparisonOperator.Less, 2),
-        }),
+        conditions: new[] { Condition.Is("screen", "home") },
+        doneWhen: Condition.Compare("plays", ComparisonOperator.GreaterOrEqual, 1)),
 };
-
-var evaluator = new TooltipEvaluator(rules, new PlayerPrefsProgressStore());
 ```
 
-3. Create the overlay once, for example when the game starts:
-
-```csharp
-var overlay = TooltipOverlay.Create();
-DontDestroyOnLoad(overlay.gameObject);
-```
-
-4. When your game state changes, build a context and show the best rule whose target is on screen:
+3. Create the director once, for example when the game starts.
 
 ```csharp
 var context = new TooltipContext()
     .Set("screen", "home")
-    .Set("level", player.Level);
+    .Set("plays", plays);
 
-foreach (var rule in evaluator.Candidates(context))
-{
-    if (!TooltipTargetRegistry.Default.TryResolve(rule.Prompt.TargetId, out var target))
-        continue; // not on screen, try the next rule
-
-    overlay.Show(rule.Prompt, target);
-    evaluator.MarkShown(rule);
-    break;
-}
+var director = TooltipDirector.Create(rules, context, new PlayerPrefsProgressStore());
+DontDestroyOnLoad(director.gameObject);
 ```
+
+4. When your game state changes, update the context and call `Check`.
+
+```csharp
+plays++;
+context.Set("plays", plays);
+director.Check();
+```
+
+The director shows the best rule whose target is on screen. When `doneWhen` becomes true, the tip ends and counts as seen. If its `conditions` stop being true first, for example the player leaves the screen, it hides and comes back later.
+
+* Leave out `doneWhen` for a tip that only explains something. Tapping the target then finishes it.
+* Pass `requires: TargetRequirement.Exists` to start a tip for a target that is off screen. The bubble points toward it.
+* Use `director.Hold()` during cutscenes and popups.
 
 The scene needs an EventSystem so the overlay can block taps.
 
@@ -69,7 +64,7 @@ The scene needs an EventSystem so the overlay can block taps.
 
 Anything that shows on screen can be a target. Every target becomes a rect on screen, worked out again each time it is needed, so moving objects are fine.
 
-**TooltipTarget component.** Add it and set an id. The **Shape** setting decides what area is highlighted:
+**TooltipTarget component.** Add it and set an id. The **Shape** setting decides what area is highlighted.
 
 | Shape | Uses |
 |-------|------|
@@ -80,13 +75,13 @@ Anything that shows on screen can be a target. Every target becomes a rect on sc
 
 **Camera.** Leave it empty and the target uses `Camera.main` if that camera renders the object's layer. If not, it uses the camera with the highest depth that does. Cameras that render to a texture are skipped. For split screen, set the camera yourself.
 
-**From code.** For objects spawned at runtime:
+**From code.** For objects spawned at runtime, attach a target.
 
 ```csharp
 TooltipTarget.Attach(enemy, "boss");
 ```
 
-For things with no GameObject of their own, like a tile or a spot on the ground:
+For things with no GameObject of their own, like a tile or a spot on the ground, register a `WorldTarget`.
 
 ```csharp
 var spot = WorldTarget.AtPoint("dig-here", tilemap.GetCellCenterWorld(cell));
@@ -104,7 +99,7 @@ TooltipTargetRegistry.Default.Unregister(spot);
 * **Follows the target every frame.** It runs in `LateUpdate`, after cameras move, and uses unscaled time so it still works when the game is paused.
 * **Off screen.** When the target leaves the screen, or goes behind the camera, the tooltip sticks to the nearest screen edge and the arrow points toward the target. When it comes back, the tooltip moves back next to it.
 * **Placement.** Uses the prompt's `Placement`. If there is no room, it flips to the other side. It always stays inside `Screen.safeArea`.
-* **Taps.** Taps inside the hole go to your game as normal, so the player can press the highlighted thing. Taps outside are blocked and raise `OutsideTapped`. By default an outside tap also closes the tooltip.
+* **Taps.** Taps inside the hole go to your game as normal, so the player can press the highlighted thing. A tap on the target raises `TargetTapped`. Taps outside are blocked and raise `OutsideTapped`. By default an outside tap also closes the tooltip.
 * **Input read directly.** If your game reads input itself instead of through the EventSystem, check `overlay.IsBlocked(screenPosition)` first.
 * **Render pipelines.** The hole is a simple UI shader, so it works in Built-in, URP and HDRP.
 
@@ -116,10 +111,8 @@ In the Package Manager, select **Smart Tooltip** and open the **Samples** tab to
 
 | Sample | Shows |
 |--------|-------|
-| UI Tooltip | Rules and a context. Tap the highlighted button and the next tip appears. |
-| 3D World | Overlay only, no rules. The tooltip follows a runner off screen, fits a bar turned in depth, and points at treasure behind the camera. Tap anywhere for the next tip. |
-
-Notes:
+| UI Tooltip | A small fake game menu that uses every part of the director, with a panel that lists each tip that starts and ends, and why. It is built from code, so the whole demo is in one script. |
+| 3D World | The director with off screen targets. The tooltip follows a runner off screen, fits a bar turned in depth, and points at treasure behind the camera. Tap the target to finish a tip, or anywhere else to skip it. |
 
 * The scenes use an EventSystem with the old Input Manager module. If your project uses the new Input System only, select the EventSystem and press **Replace with InputSystemUIInputModule**.
 * The 3D sample uses Unity's default material. In URP or HDRP, convert it with the render pipeline converter or the objects show pink.
@@ -130,8 +123,9 @@ Notes:
 |------|------|
 | `ITooltipContext` | Read-only game state. Implement it over your own game or use `TooltipContext`. |
 | `ICondition` | A yes/no check against the context. Use `Condition.*` or write your own. |
-| `TooltipRule` | Conditions + prompt + priority + show-once. |
+| `TooltipRule` | A prompt, when it may show, when it is done, priority, show once, cooldown and whether the target must be on screen. |
 | `TooltipEvaluator` | Returns rules that may show now, best first. |
+| `TooltipDirector` | Runs the evaluator and the overlay for you. It checks on events, waits for UI to settle and holds while the game is busy. |
 | `ITooltipProgressStore` | Remembers which show-once rules were seen. |
 | `ITooltipTarget` | Anything that can report a screen rect. `TooltipTarget` and `WorldTarget` cover UI, 2D and 3D. |
 
@@ -139,9 +133,9 @@ Notes:
 
 ## Roadmap
 
-- Runtime driver (re-evaluate on events, wait for UI to settle, busy gate)
+- A quiet hint style with no dimming, for tips during gameplay
 - ScriptableObject and JSON rule authoring
 
 ## License
 
-MIT, see [LICENSE.md](LICENSE.md).
+MIT. See [LICENSE.md](LICENSE.md).

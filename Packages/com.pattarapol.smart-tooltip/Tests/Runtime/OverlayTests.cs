@@ -106,6 +106,27 @@ namespace SmartTooltip.Tests
 
             cube.transform.position = new Vector3(1000, 0, 0);
             Assert.IsFalse(TooltipTargetRegistry.Default.TryResolve("cube", out _));
+            Assert.IsTrue(TooltipTargetRegistry.Default.TryFind("cube", out _), "TryFind also finds it off screen");
+
+            cube.SetActive(false);
+            Assert.IsFalse(TooltipTargetRegistry.Default.TryFind("cube", out _));
+        }
+
+        [UnityTest]
+        public IEnumerator Overlay_TapInsideHole_RaisesTargetTapped()
+        {
+            var taps = 0;
+            overlay.TargetTapped += () => taps++;
+            overlay.Show(new TooltipPrompt("cube", "Tap me", Placement.Above), target);
+            yield return new WaitForSecondsRealtime(SettleTime);
+
+            overlay.OnPointerPressed(new Vector2(5, 5));
+            overlay.OnPointerReleased(CubeOnScreen);
+            Assert.AreEqual(0, taps, "a drag into the hole is not a tap");
+
+            overlay.OnPointerPressed(CubeOnScreen);
+            overlay.OnPointerReleased(CubeOnScreen);
+            Assert.AreEqual(1, taps);
         }
 
         [UnityTest]
@@ -193,8 +214,8 @@ namespace SmartTooltip.Tests
         [UnityTest]
         public IEnumerator Overlay_TargetDisabled_Hides()
         {
-            var hidden = false;
-            overlay.Hidden += () => hidden = true;
+            TooltipHideReason? hidden = null;
+            overlay.Hidden += reason => hidden = reason;
             overlay.Show(new TooltipPrompt("cube", "Bye", Placement.Above), target);
             yield return new WaitForSecondsRealtime(SettleTime);
 
@@ -202,7 +223,7 @@ namespace SmartTooltip.Tests
             yield return new WaitForSecondsRealtime(SettleTime);
 
             Assert.IsFalse(overlay.IsShowing);
-            Assert.IsTrue(hidden);
+            Assert.AreEqual(TooltipHideReason.TargetLost, hidden);
         }
 
         IEnumerator Capture(string name)

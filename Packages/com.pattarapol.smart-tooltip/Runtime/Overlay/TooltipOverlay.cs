@@ -42,13 +42,19 @@ namespace SmartTooltip
         OverlayLayout shown;
         bool hasLayout;
         bool hiding;
+        TooltipHideReason hideReason;
+        bool pressStartedInHole;
         float blend = 1f;
         float alpha;
 
         /// <summary>A tap outside the hole. Taps inside the hole go to your game.</summary>
         public event Action OutsideTapped;
 
-        public event Action Hidden;
+        /// <summary>A tap inside the hole, on the target. The tap still reaches your game first.</summary>
+        public event Action TargetTapped;
+
+        /// <summary>Fires once the fade out ends. Not fired when Show replaces the current tip.</summary>
+        public event Action<TooltipHideReason> Hidden;
 
         public bool IsShowing => target != null && !hiding;
         public ITooltipTarget Target => target;
@@ -77,10 +83,14 @@ namespace SmartTooltip
                 Debug.LogWarning("Smart Tooltip: no EventSystem in the scene, so taps will not be blocked or detected.");
         }
 
-        public void Hide()
+        public void Hide() => BeginHide(TooltipHideReason.Requested);
+
+        void BeginHide(TooltipHideReason reason)
         {
-            if (target != null)
-                hiding = true;
+            if (target == null || hiding)
+                return;
+            hiding = true;
+            hideReason = reason;
         }
 
         void Awake()
@@ -139,7 +149,7 @@ namespace SmartTooltip
 
             if (!TryGetTargetRect(out var targetRect))
             {
-                Hide();
+                BeginHide(TooltipHideReason.TargetLost);
                 return;
             }
 
@@ -164,7 +174,25 @@ namespace SmartTooltip
             shown = OverlayLayout.Lerp(from, goal, t);
             alpha = Mathf.MoveTowards(alpha, 1f, step);
             Apply();
+
+            if (PointerInput.WasPressed(out var pressed))
+                OnPointerPressed(pressed);
+            if (PointerInput.WasReleased(out var released))
+                OnPointerReleased(released);
         }
+
+        // A tap must start and end in the hole, so a drag that ends there does not count.
+        internal void OnPointerPressed(Vector2 screenPoint) => pressStartedInHole = IsInHole(screenPoint);
+
+        internal void OnPointerReleased(Vector2 screenPoint)
+        {
+            var tapped = pressStartedInHole && IsInHole(screenPoint);
+            pressStartedInHole = false;
+            if (tapped)
+                TargetTapped?.Invoke();
+        }
+
+        bool IsInHole(Vector2 screenPoint) => IsShowing && hasLayout && shown.OnScreen && shown.Hole.Contains(screenPoint);
 
         bool TryGetTargetRect(out Rect rect)
         {
@@ -213,15 +241,16 @@ namespace SmartTooltip
             prompt = null;
             hiding = false;
             hasLayout = false;
+            pressStartedInHole = false;
             canvas.enabled = false;
-            Hidden?.Invoke();
+            Hidden?.Invoke(hideReason);
         }
 
         void OnOutsideTap()
         {
             OutsideTapped?.Invoke();
             if (closeOnOutsideTap)
-                Hide();
+                BeginHide(TooltipHideReason.OutsideTap);
         }
 
         T GetOrAdd<T>() where T : Component =>
