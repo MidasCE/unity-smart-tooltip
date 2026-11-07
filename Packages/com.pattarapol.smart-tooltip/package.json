@@ -25,12 +25,12 @@
   "samples": [
     {
       "displayName": "UI Tooltip",
-      "description": "Three buttons on a canvas. Rules pick the next tip from the game state.",
+      "description": "A small game menu built from code. Shows the director picking tips, holds, cooldowns and every end reason, with a live log.",
       "path": "Samples~/UI Tooltip"
     },
     {
       "displayName": "3D World",
-      "description": "Orbiting camera, a runner that leaves the screen, an object turned in depth and one that ends up behind the camera.",
+      "description": "Tips that start for targets off screen or behind the camera. An orbiting camera, a runner that leaves the screen and an object turned in depth.",
       "path": "Samples~/3D World"
     }
   ]

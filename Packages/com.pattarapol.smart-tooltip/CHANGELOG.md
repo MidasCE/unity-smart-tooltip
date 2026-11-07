@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-11-07
 
 ### Added
 - Core rule engine with `TooltipRule`, `TooltipPrompt`, `TooltipEvaluator` and the built in `Condition` factory.
